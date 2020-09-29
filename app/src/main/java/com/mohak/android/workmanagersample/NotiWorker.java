@@ -3,8 +3,15 @@ package com.mohak.android.workmanagersample;
 import android.content.Context;
 import android.support.annotation.NonNull;
 import android.util.Log;
+
+import androidx.work.Constraints;
+import androidx.work.NetworkType;
+import androidx.work.OneTimeWorkRequest;
+import androidx.work.WorkManager;
 import androidx.work.Worker;
 import androidx.work.WorkerParameters;
+
+import java.util.concurrent.TimeUnit;
 
 public class NotiWorker extends Worker {
 
@@ -36,6 +43,19 @@ public class NotiWorker extends Worker {
         try {
             Log.d(TAG, "doWork Called");
             Utils.sendNotification(context);
+            WorkManager workManager = WorkManager.getInstance();
+            Constraints constraints = new Constraints.Builder()
+                    .setRequiresCharging(false)
+                    .setRequiredNetworkType(NetworkType.CONNECTED)
+                    .build();
+
+            OneTimeWorkRequest oneTimeWorkRequest = new OneTimeWorkRequest.Builder
+                    (NotiWorker.class)
+                    .setConstraints(constraints)
+                    .setInitialDelay(5, TimeUnit.SECONDS)
+                    .build();
+            workManager.enqueue(oneTimeWorkRequest);
+
             return Result.success();
         } catch (Throwable throwable) {
             Log.d(TAG, "Error Sending Notification" + throwable.getMessage());
